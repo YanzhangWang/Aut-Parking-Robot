@@ -1,5 +1,5 @@
-const int TrigPin=8;           //Set pin 6 as the launching pin position
-const int EchoPin=9;           //Set pin 7 as the receiving pin position
+const int TrigPin=8;           //Set pin 8 as the launching pin position
+const int EchoPin=9;           //Set pin 9 as the receiving pin position
 float cm;                 
 
 void setup() {
