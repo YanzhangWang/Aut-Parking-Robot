@@ -7,14 +7,13 @@ int tcrt;
 
 void setup() {
   pinMode(A0, INPUT);  // 模块连接引脚A0，并设置为输入模式
-  pinMode(13, OUTPUT);
+ 
   Serial.begin(9600); // 设置串口波特率为9600
 }
 
 void loop(){
   tcrt = analogRead(A0);//读取寻迹传感器输出的值
-  analogWrite(13, tcrt / 4);
   
   Serial.println(tcrt);
-  delay(500);// 延时500毫秒
+  delay(150);// 延时500毫秒
 }
