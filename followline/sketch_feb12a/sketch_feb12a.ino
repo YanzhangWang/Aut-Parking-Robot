@@ -14,9 +14,9 @@
 #define LFSensor_3 A3
 #define LFSensor_4 A4  //OLD D10
 
-#define FAST_SPEED 80
-#define MID_SPEED 80
-#define SLOW_SPEED  80     //back speed
+#define FAST_SPEED 40
+#define MID_SPEED 20
+#define SLOW_SPEED  10     //back speed
 
 
 /*motor control*/
@@ -120,28 +120,28 @@ String read_sensor_values()
 void auto_tracking(){
  String sensorval= read_sensor_values();
   Serial.println(sensorval);
-  if (   sensorval=="10000" )
+  if (   sensorval=="10000" || sensorval=="11000")
   { 
     //The black line is in the left of the car, need  left turn 
     go_Left();  //Turn left
-    set_Motorspeed(FAST_SPEED,FAST_SPEED);
+    //set_Motorspeed(FAST_SPEED,FAST_SPEED);
   }
-  if (sensorval=="10100"  || sensorval=="01000" || sensorval=="01100" || sensorval=="11100"  || sensorval=="10010" || sensorval=="11010")
+  if (sensorval=="01100"  || sensorval=="00110" || sensorval=="00100" || sensorval=="01110")
   {
     go_Advance();  //Turn slight left
-    set_Motorspeed(0,FAST_SPEED);
+    //set_Motorspeed(0,FAST_SPEED);
   }
-  if (    sensorval=="00001"  ){ //The black line is  on the right of the car, need  right turn 
+  if (    sensorval=="00001" || sensorval=="00011" ){ //The black line is  on the right of the car, need  right turn 
     go_Right();  //Turn right
-    set_Motorspeed(FAST_SPEED,FAST_SPEED);
+    //set_Motorspeed(FAST_SPEED,FAST_SPEED);
   }
-  if (sensorval=="00011" || sensorval=="00010"  || sensorval=="00101" || sensorval=="00110" || sensorval=="00111" || sensorval=="01101" || sensorval=="01111"   || sensorval=="01011"  || sensorval=="01001")
-  {
-    go_Advance();  //Turn slight right
-    set_Motorspeed( FAST_SPEED,0);
-  }
+//  if (sensorval=="00011" || sensorval=="00010"  || sensorval=="00101" || sensorval=="00110" || sensorval=="00111" || sensorval=="01101" || sensorval=="01111"   || sensorval=="01011"  || sensorval=="01001")
+//  {
+//    go_Advance();  //Turn slight right
+//    set_Motorspeed( FAST_SPEED,0);
+//  }
  
-  if (sensorval=="11111"){
+  if (sensorval=="11111"|| sensorval =="00000" ||sensorval =="10001"||sensorval=="11001"||sensorval=="10011"){
     stop_Stop();   //The car front touch stop line, need stop
     set_Motorspeed(0,0);
   }
