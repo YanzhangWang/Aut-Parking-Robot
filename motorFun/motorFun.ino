@@ -5,8 +5,8 @@ const byte IN2=2;
 const byte IN3=1;
 const byte IN4=0;
 
-int MAspeed = 120;
-int MBspeed = 120;
+int MAspeed = 0;
+int MBspeed = 0;
 
 void MAclock(){
   analogWrite(ENA, MAspeed);
@@ -58,5 +58,6 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  forward();
 
 }
