@@ -5,6 +5,8 @@
 #define speedPinL 6    // Left PWM pin connect MODEL-X ENB
 #define LeftMotorDirPin1  9    //Left Motor direction pin 1 to MODEL-X IN3 
 #define LeftMotorDirPin2  10   //Left Motor direction pin 1 to MODEL-X IN4 
+#define Echo_PIN    2   // Ultrasonic Echo pin connect to D2
+#define Trig_PIN    3   // Ultrasonic Trig pin connect to D3
 
 
 /*From left to right, connect to D3,A1-A3 ,D10*/
@@ -17,8 +19,10 @@
 #define FAST_SPEED 40
 #define MID_SPEED 20
 #define SLOW_SPEED  10     //back speed
+unsigned long timeOver30mmStart = 0; // 用于跟踪距离首次超过30mm的时间点
+boolean isOver30mm = false; // 标记是否已经开始跟踪超过30mm的情况
 
-
+float distance;
 /*motor control*/
 void go_Advance(void)  //Forward
 {
@@ -73,6 +77,44 @@ void set_Motorspeed(int speed_L,int speed_R)
   analogWrite(speedPinR,speed_R);   
 }
 
+void measureDistance() {
+  digitalWrite(Trig_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(Trig_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(Trig_PIN, LOW);
+  float duration = pulseIn(Echo_PIN, HIGH);
+  distance = duration * 0.034 / 2; // 计算距离
+  unsigned long currentTime = millis(); // 获取当前时间
+
+  if (distance < 100) {
+    go_Right(); // 如果距离小于100mm，则左转
+    delay(1000); // 根据需要调整延时，以确保转弯的时间足够
+    stop_Stop(); // 停止转弯
+    // 重置计时器
+    timeOver30mmStart = 0;
+    isOver30mm = false;
+  } else if (distance > 30) {
+    if (!isOver30mm) {
+      // 如果这是首次检测到距离超过30mm，记录当前时间
+      timeOver30mmStart = currentTime;
+      isOver30mm = true;
+    } else if (currentTime - timeOver30mmStart >= 15000) {
+      // 如果距离超过30mm的时间已经超过3秒，执行右转操作
+      go_Right();
+      delay(1000); // 调整延时以确保转弯的时间足够
+      stop_Stop(); // 停止转弯
+      // 重置计时器
+      timeOver30mmStart = 0;
+      isOver30mm = false;
+    }
+  } else {
+    // 如果距离不超过30mm，重置计时器
+    timeOver30mmStart = 0;
+    isOver30mm = false;
+  }
+}
+
 void setup()
 {
    
@@ -84,7 +126,9 @@ void setup()
   pinMode(LeftMotorDirPin2, OUTPUT); 
   pinMode(speedPinR, OUTPUT); 
   stop_Stop();//stop move  
-
+  
+  pinMode(Trig_PIN, OUTPUT);
+  pinMode(Echo_PIN, INPUT);
   Serial.begin(9600);   // initialize serial for debugging
 
 }
@@ -92,8 +136,10 @@ void setup()
 boolean flag=false;
 void loop()
 { 
+  measureDistance();
  auto_tracking();
 } //end of loop
+
  
 char sensor[5];
  /*read sensor value string, 1 stands for black, 0 starnds for white, i.e 10000 means the first sensor(from left) detect black line, other 4 sensors detected white ground */
@@ -126,7 +172,7 @@ void auto_tracking(){
     go_Left();  //Turn left
     //set_Motorspeed(FAST_SPEED,FAST_SPEED);
   }
-  if (sensorval=="01100"  || sensorval=="00110" || sensorval=="00100" || sensorval=="01110")
+  if (sensorval=="01100"  || sensorval=="00110" || sensorval=="00100" || sensorval=="01110"|| sensorval =="01000" ||sensorval =="00010")
   {
     go_Advance();  //Turn slight left
     //set_Motorspeed(0,FAST_SPEED);
