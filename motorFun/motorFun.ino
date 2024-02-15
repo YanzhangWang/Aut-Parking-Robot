@@ -77,43 +77,6 @@ void set_Motorspeed(int speed_L,int speed_R)
   analogWrite(speedPinR,speed_R);   
 }
 
-//void measureDistance() {
-//  digitalWrite(Trig_PIN, LOW);
-//  delayMicroseconds(2);
-//  digitalWrite(Trig_PIN, HIGH);
-//  delayMicroseconds(10);
-//  digitalWrite(Trig_PIN, LOW);
-//  float duration = pulseIn(Echo_PIN, HIGH);
-//  distance = duration * 0.034 / 2; // 计算距离
-//  unsigned long currentTime = millis(); // 获取当前时间
-//
-//  if (distance < 100) {
-//    go_Right(); // 如果距离小于100mm，则左转
-//    delay(1000); // 根据需要调整延时，以确保转弯的时间足够
-//    stop_Stop(); // 停止转弯
-//    // 重置计时器
-//    timeOver30mmStart = 0;
-//    isOver30mm = false;
-//  } else if (distance > 30) {
-//    if (!isOver30mm) {
-//      // 如果这是首次检测到距离超过30mm，记录当前时间
-//      timeOver30mmStart = currentTime;
-//      isOver30mm = true;
-//    } else if (currentTime - timeOver30mmStart >= 15000) {
-//      // 如果距离超过30mm的时间已经超过3秒，执行右转操作
-//      go_Right();
-//      delay(1000); // 调整延时以确保转弯的时间足够
-//      stop_Stop(); // 停止转弯
-//      // 重置计时器
-//      timeOver30mmStart = 0;
-//      isOver30mm = false;
-//    }
-//  } else {
-//    // 如果距离不超过30mm，重置计时器
-//    timeOver30mmStart = 0;
-//    isOver30mm = false;
-//  }
-//}
 
 void setup()
 {
@@ -136,7 +99,7 @@ void setup()
 boolean flag=false;
 void loop()
 { 
-  //measureDistance();
+
  auto_tracking();
 } //end of loop
 
@@ -181,11 +144,7 @@ void auto_tracking(){
     go_Right();  //Turn right
     //set_Motorspeed(FAST_SPEED,FAST_SPEED);
   }
-//  if (sensorval=="00011" || sensorval=="00010"  || sensorval=="00101" || sensorval=="00110" || sensorval=="00111" || sensorval=="01101" || sensorval=="01111"   || sensorval=="01011"  || sensorval=="01001")
-//  {
-//    go_Advance();  //Turn slight right
-//    set_Motorspeed( FAST_SPEED,0);
-//  }
+
  
   if (sensorval=="11111"|| sensorval =="00000" ||sensorval =="10001"||sensorval=="11001"||sensorval=="10011"){
     stop_Stop();   //The car front touch stop line, need stop
