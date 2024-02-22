@@ -9,9 +9,9 @@
 #define TrigPin    8   // Ultrasonic Trig pin connect to D3
 #define LFSensor_0 A0  //Infrared Sensor - Line-following
 
-#define FAST_SPEED 40
-#define MID_SPEED 20
-#define SLOW_SPEED  10     //back speed
+#define FAST_SPEED 400
+#define MID_SPEED 200
+#define SLOW_SPEED  100     //back speed
 unsigned long timeOver30mmStart = 0; /* 用于跟踪距离首次超过30mm的时间点 Used to track the time point when the distance exceeds 30mm for the first time*/
 boolean isOver30mm = false; /* 标记是否已经开始跟踪超过30mm的情况 Whether the marker has started tracking beyond 30mm*/
 
@@ -92,6 +92,7 @@ void setup()
 boolean flag=false;
 void loop()
 { 
+  go_Advance();
   // Infrared (Line-following) Sensor
   // read the input on analog pin 0:
   int sensorValue = analogRead(A0);
@@ -101,16 +102,16 @@ void loop()
   // the lower the voltage, the brighter it is
   if ((voltage >= 0) && (voltage <= 0.4)) {
     Serial.print ("it is dark - ");
-    //go_Left();
-    delay(100);
+    go_Left();
+    delay(1000);
   } else if ((voltage > 0.4) && (voltage <= 2)) {
-    //go_Right();
+    go_Right();
     Serial.print ("it is bright - ");
-    delay(100);
+    delay(1000);
   } else {
-    //go_Right();
+    go_Right();
     Serial.print ("it is bright - ");
-    delay(100);
+    delay(1000);
   }
   // print out the value you read:
   Serial.println(voltage);
@@ -134,12 +135,14 @@ void loop()
   if(cm<=40.0){
     digitalWrite(9, HIGH);
     Serial.println("/nno space"); //include a line to kep going for a little bit
+    delay(1000);
   } else if(cm>40){
     digitalWrite(9, LOW);
     Serial.println("/nSpace detected"); //include a line to turn right
+    delay(1000);
   }
     
-
+  delay(3000);
 
 
 } //end of loop
