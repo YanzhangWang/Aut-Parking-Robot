@@ -1,1 +1,10 @@
-
+// Define all pin connections
+#define speedPinR 6    //  RIGHT PWM pin connect MODEL-X ENA
+#define RightMotorDirPin1  5    //Right Motor direction pin 1 to MODEL-X IN1 
+#define RightMotorDirPin2  2    //Right Motor direction pin 2 to MODEL-X IN2
+#define speedPinL 7    // Left PWM pin connect MODEL-X ENB
+#define LeftMotorDirPin1  3    //Left Motor direction pin 1 to MODEL-X IN3 
+#define LeftMotorDirPin2  4   //Left Motor direction pin 1 to MODEL-X IN4 
+#define Echo_PIN    9   // Ultrasonic Echo pin connect to D2
+#define Trig_PIN    8   // Ultrasonic Trig pin connect to D3
+#define LFSensor_0 A0  //Infrared Sensor - Line-following
