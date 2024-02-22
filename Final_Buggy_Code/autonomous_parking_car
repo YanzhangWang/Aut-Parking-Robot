@@ -101,13 +101,16 @@ void loop()
   // the lower the voltage, the brighter it is
   if ((voltage >= 0) && (voltage <= 0.4)) {
     Serial.print ("it is dark - ");
+    //go_Left();
     delay(100);
   } else if ((voltage > 0.4) && (voltage <= 2)) {
-    delay(100);
+    //go_Right();
     Serial.print ("it is bright - ");
+    delay(100);
   } else {
-    delay(100);
+    //go_Right();
     Serial.print ("it is bright - ");
+    delay(100);
   }
   // print out the value you read:
   Serial.println(voltage);
@@ -130,12 +133,14 @@ void loop()
   Serial.print(cm);
   if(cm<=40.0){
     digitalWrite(9, HIGH);
-    
-
-
-
-}} //end of loop
+    Serial.println("/nno space"); //include a line to kep going for a little bit
+  } else if(cm>40){
+    digitalWrite(9, LOW);
+    Serial.println("/nSpace detected"); //include a line to turn right
   }
     
-}
+
+
+
+} //end of loop
 
