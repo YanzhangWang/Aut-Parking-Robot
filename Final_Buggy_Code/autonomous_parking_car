@@ -92,8 +92,8 @@ void setup()
 boolean flag=false;
 void loop()
 { 
+  // Ultrasonic Sensor
   digitalWrite(9, LOW);
-
 
   digitalWrite(TrigPin,LOW);        //Send level pulses to the Trigpin pins in low and high order
   delayMicroseconds(2);             //Delay time
@@ -105,6 +105,7 @@ void loop()
   if(cm<=40.0){
     digitalWrite(9, HIGH);
 
+  // Infrared (Line-following) Sensor
   // read the input on analog pin 0:
   int sensorValue = analogRead(A0);
   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
