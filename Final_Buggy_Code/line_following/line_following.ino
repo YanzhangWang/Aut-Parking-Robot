@@ -1,3 +1,9 @@
+/* 
+Link to original code:
+https://www.hackster.io/ingo-lohs/light-sensing-with-the-flying-fish-series-from-mh-0e51ab#things
+
+*/
+
 // A0:
 
 // the setup routine runs once when you press reset:
