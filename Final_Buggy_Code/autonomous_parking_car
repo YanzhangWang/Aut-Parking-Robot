@@ -8,3 +8,141 @@
 #define Echo_PIN    9   // Ultrasonic Echo pin connect to D2
 #define Trig_PIN    8   // Ultrasonic Trig pin connect to D3
 #define LFSensor_0 A0  //Infrared Sensor - Line-following
+
+#define FAST_SPEED 40
+#define MID_SPEED 20
+#define SLOW_SPEED  10     //back speed
+unsigned long timeOver30mmStart = 0; /* 用于跟踪距离首次超过30mm的时间点 Used to track the time point when the distance exceeds 30mm for the first time*/
+boolean isOver30mm = false; /* 标记是否已经开始跟踪超过30mm的情况 Whether the marker has started tracking beyond 30mm*/
+
+float distance;
+/*motor control*/
+void go_Advance(void)  //Forward
+{
+  digitalWrite(RightMotorDirPin1, LOW);
+  digitalWrite(RightMotorDirPin2,HIGH);
+  digitalWrite(LeftMotorDirPin1,LOW);
+  digitalWrite(LeftMotorDirPin2,HIGH);
+  analogWrite(speedPinL,100);
+  analogWrite(speedPinR,100);
+}
+void go_Left(int t=0)  //Turn left
+{
+  digitalWrite(RightMotorDirPin1,LOW );
+  digitalWrite(RightMotorDirPin2,HIGH);
+  digitalWrite(LeftMotorDirPin1,HIGH);
+  digitalWrite(LeftMotorDirPin2,LOW);
+  analogWrite(speedPinL,0);
+  analogWrite(speedPinR,100);
+  delay(t);
+}
+void go_Right(int t=0)  //Turn right
+{
+  digitalWrite(RightMotorDirPin1,HIGH);
+  digitalWrite(RightMotorDirPin2,LOW);
+  digitalWrite(LeftMotorDirPin1,LOW);
+  digitalWrite(LeftMotorDirPin2,HIGH);
+  analogWrite(speedPinL,100);
+  analogWrite(speedPinR,0);
+  delay(t);
+}
+void go_Back(int t=0)  //Reverse
+{
+  digitalWrite(RightMotorDirPin1,HIGH);
+  digitalWrite(RightMotorDirPin2,LOW);
+  digitalWrite(LeftMotorDirPin1,HIGH);
+  digitalWrite(LeftMotorDirPin2,LOW);
+  analogWrite(speedPinL,100);
+  analogWrite(speedPinR,100);
+  delay(t);
+}
+void stop_Stop()    //Stop
+{
+  digitalWrite(RightMotorDirPin1, LOW);
+  digitalWrite(RightMotorDirPin2,LOW);
+  digitalWrite(LeftMotorDirPin1,LOW);
+  digitalWrite(LeftMotorDirPin2,LOW);
+}
+/*set motor speed */
+void set_Motorspeed(int speed_L,int speed_R)
+{
+  analogWrite(speedPinL,speed_L); 
+  analogWrite(speedPinR,speed_R);   
+}
+
+
+void setup()
+{
+   
+  pinMode(RightMotorDirPin1, OUTPUT); 
+  pinMode(RightMotorDirPin2, OUTPUT); 
+  pinMode(speedPinL, OUTPUT);  
+ 
+  pinMode(LeftMotorDirPin1, OUTPUT);
+  pinMode(LeftMotorDirPin2, OUTPUT); 
+  pinMode(speedPinR, OUTPUT); 
+  stop_Stop();//stop move  
+  
+  pinMode(Trig_PIN, OUTPUT);
+  pinMode(Echo_PIN, INPUT);
+  Serial.begin(9600);   // initialize serial for debugging
+
+}
+
+boolean flag=false;
+void loop()
+{ 
+
+ auto_tracking();
+} //end of loop
+
+ 
+char sensor[5];
+ /*read sensor value string, 1 stands for black, 0 starnds for white, i.e 10000 means the first sensor(from left) detect black line, other 4 sensors detected white ground */
+String read_sensor_values()
+{   int sensorvalue=32;
+  sensor[0]= !digitalRead(LFSensor_0);
+ 
+  sensor[1]=!digitalRead(LFSensor_1);
+ 
+  sensor[2]=!digitalRead(LFSensor_2);
+ 
+  sensor[3]=!digitalRead(LFSensor_3);
+ 
+  sensor[4]=!digitalRead(LFSensor_4);
+  sensorvalue +=sensor[0]*16+sensor[1]*8+sensor[2]*4+sensor[3]*2+sensor[4];
+  
+  String senstr= String(sensorvalue,BIN);
+  senstr=senstr.substring(1,6);
+
+
+  return senstr;
+}
+
+void auto_tracking(){
+ String sensorval= read_sensor_values();
+  Serial.println(sensorval);
+  if (   sensorval=="10000" || sensorval=="11000")
+  { 
+    //The black line is in the left of the car, need  left turn 
+    go_Left();  //Turn left
+    //set_Motorspeed(FAST_SPEED,FAST_SPEED);
+  }
+  if (sensorval=="01100"  || sensorval=="00110" || sensorval=="00100" || sensorval=="01110"|| sensorval =="01000" ||sensorval =="00010")
+  {
+    go_Advance();  //Turn slight left
+    //set_Motorspeed(0,FAST_SPEED);
+  }
+  if (    sensorval=="00001" || sensorval=="00011" ){ //The black line is  on the right of the car, need  right turn 
+    go_Right();  //Turn right
+    //set_Motorspeed(FAST_SPEED,FAST_SPEED);
+  }
+
+ 
+  if (sensorval=="11111"|| sensorval =="00000" ||sensorval =="10001"||sensorval=="11001"||sensorval=="10011"){
+    stop_Stop();   //The car front touch stop line, need stop
+    set_Motorspeed(0,0);
+  }
+    
+}
+
