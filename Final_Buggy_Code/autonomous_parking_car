@@ -5,8 +5,8 @@
 #define speedPinL 7    // Left PWM pin connect MODEL-X ENB
 #define LeftMotorDirPin1  3    //Left Motor direction pin 1 to MODEL-X IN3 
 #define LeftMotorDirPin2  4   //Left Motor direction pin 1 to MODEL-X IN4 
-#define Echo_PIN    9   // Ultrasonic Echo pin connect to D2
-#define Trig_PIN    8   // Ultrasonic Trig pin connect to D3
+#define EchoPin    9   // Ultrasonic Echo pin connect to D2
+#define TrigPin    8   // Ultrasonic Trig pin connect to D3
 #define LFSensor_0 A0  //Infrared Sensor - Line-following
 
 #define FAST_SPEED 40
@@ -83,8 +83,8 @@ void setup()
   pinMode(speedPinR, OUTPUT); 
   stop_Stop();//stop move  
   
-  pinMode(Trig_PIN, OUTPUT);
-  pinMode(Echo_PIN, INPUT);
+  pinMode(TrigPin, OUTPUT);
+  pinMode(EchoPin, INPUT);
   Serial.begin(9600);   // initialize serial for debugging
 
 }
@@ -92,56 +92,41 @@ void setup()
 boolean flag=false;
 void loop()
 { 
-
- auto_tracking();
-} //end of loop
-
- 
-char sensor[5];
- /*read sensor value string, 1 stands for black, 0 starnds for white, i.e 10000 means the first sensor(from left) detect black line, other 4 sensors detected white ground */
-String read_sensor_values()
-{   int sensorvalue=32;
-  sensor[0]= !digitalRead(LFSensor_0);
- 
-  sensor[1]=!digitalRead(LFSensor_1);
- 
-  sensor[2]=!digitalRead(LFSensor_2);
- 
-  sensor[3]=!digitalRead(LFSensor_3);
- 
-  sensor[4]=!digitalRead(LFSensor_4);
-  sensorvalue +=sensor[0]*16+sensor[1]*8+sensor[2]*4+sensor[3]*2+sensor[4];
-  
-  String senstr= String(sensorvalue,BIN);
-  senstr=senstr.substring(1,6);
+  digitalWrite(9, LOW);
 
 
-  return senstr;
-}
+  digitalWrite(TrigPin,LOW);        //Send level pulses to the Trigpin pins in low and high order
+  delayMicroseconds(2);             //Delay time
+  digitalWrite(TrigPin,HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TrigPin,LOW);
+  double cm=pulseIn(EchoPin,HIGH)/58.0;    //Read the pulse width and convert it to centimeters
+  Serial.print(cm);
+  if(cm<=40.0){
+    digitalWrite(9, HIGH);
 
-void auto_tracking(){
- String sensorval= read_sensor_values();
-  Serial.println(sensorval);
-  if (   sensorval=="10000" || sensorval=="11000")
-  { 
-    //The black line is in the left of the car, need  left turn 
-    go_Left();  //Turn left
-    //set_Motorspeed(FAST_SPEED,FAST_SPEED);
+  // read the input on analog pin 0:
+  int sensorValue = analogRead(A0);
+  // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
+  float voltage = sensorValue * (5.0 / 1024.0);
+
+  // the lower the voltage, the brighter it is
+  if ((voltage >= 0) && (voltage <= 0.4)) {
+    Serial.print ("it is dark - ");
+  } else if ((voltage > 0.4) && (voltage <= 2)) {
+    Serial.print ("it is bright - ");
+  } else {
+    Serial.print ("it is bright - ");
   }
-  if (sensorval=="01100"  || sensorval=="00110" || sensorval=="00100" || sensorval=="01110"|| sensorval =="01000" ||sensorval =="00010")
-  {
-    go_Advance();  //Turn slight left
-    //set_Motorspeed(0,FAST_SPEED);
-  }
-  if (    sensorval=="00001" || sensorval=="00011" ){ //The black line is  on the right of the car, need  right turn 
-    go_Right();  //Turn right
-    //set_Motorspeed(FAST_SPEED,FAST_SPEED);
-  }
+  // print out the value you read:
+  Serial.println(voltage);
 
- 
-  if (sensorval=="11111"|| sensorval =="00000" ||sensorval =="10001"||sensorval=="11001"||sensorval=="10011"){
-    stop_Stop();   //The car front touch stop line, need stop
-    set_Motorspeed(0,0);
+// D0:
+
+// when sensor pin D0 is connected, the sensor only knows the state light (0.14V) and dark (5.0V).
+// The brightness at which the particular state is to be set can be set using the rotary potentiometer.
+
+}} //end of loop
   }
     
 }
