@@ -1,37 +1,25 @@
-//Define L298N Dual H-Bridge Motor Controller Pins
-#define speedPinR 5    //  RIGHT PWM pin connect MODEL-X ENA
+// Define all pin connections
+#define speedPinR 6    //  RIGHT PWM pin connect MODEL-X ENA
 #define RightMotorDirPin1  7    //Right Motor direction pin 1 to MODEL-X IN1 
-#define RightMotorDirPin2  8    //Right Motor direction pin 2 to MODEL-X IN2
-#define speedPinL 6    // Left PWM pin connect MODEL-X ENB
-#define LeftMotorDirPin1  9    //Left Motor direction pin 1 to MODEL-X IN3 
-#define LeftMotorDirPin2  10   //Left Motor direction pin 1 to MODEL-X IN4 
-#define Echo_PIN    2   // Ultrasonic Echo pin connect to D2
-#define Trig_PIN    3   // Ultrasonic Trig pin connect to D3
+#define RightMotorDirPin2  4    //Right Motor direction pin 2 to MODEL-X IN2
+#define speedPinL 5    // Left PWM pin connect MODEL-X ENB
+#define LeftMotorDirPin1  3    //Left Motor direction pin 1 to MODEL-X IN3 
+#define LeftMotorDirPin2  2   //Left Motor direction pin 1 to MODEL-X IN4 
+#define EchoPin    9   // Ultrasonic Echo pin connect to D2
+#define TrigPin    8   // Ultrasonic Trig pin connect to D3
+
+const int trct500Pin = A0; // 假设TRCT500连接到模拟输入A0
 
 
-/*From left to right, connect to D3,A1-A3 ,D10*/
-#define LFSensor_0 A0  //OLD D3
-#define LFSensor_1 A1
-#define LFSensor_2 A2
-#define LFSensor_3 A3
-#define LFSensor_4 A4  //OLD D10
-
-#define FAST_SPEED 40
-#define MID_SPEED 20
-#define SLOW_SPEED  10     //back speed
-unsigned long timeOver30mmStart = 0; // 用于跟踪距离首次超过30mm的时间点
-boolean isOver30mm = false; // 标记是否已经开始跟踪超过30mm的情况
-
-float distance;
 /*motor control*/
 void go_Advance(void)  //Forward
 {
   digitalWrite(RightMotorDirPin1, LOW);
   digitalWrite(RightMotorDirPin2,HIGH);
-  digitalWrite(LeftMotorDirPin1,LOW);
-  digitalWrite(LeftMotorDirPin2,HIGH);
-  analogWrite(speedPinL,100);
-  analogWrite(speedPinR,100);
+  digitalWrite(LeftMotorDirPin1,HIGH);
+  digitalWrite(LeftMotorDirPin2,LOW);
+  analogWrite(speedPinL,140);
+  analogWrite(speedPinR,140);
 }
 void go_Left(int t=0)  //Turn left
 {
@@ -39,28 +27,28 @@ void go_Left(int t=0)  //Turn left
   digitalWrite(RightMotorDirPin2,HIGH);
   digitalWrite(LeftMotorDirPin1,HIGH);
   digitalWrite(LeftMotorDirPin2,LOW);
-  analogWrite(speedPinL,0);
-  analogWrite(speedPinR,100);
+  analogWrite(speedPinL,80);
+  analogWrite(speedPinR,150);
   delay(t);
 }
 void go_Right(int t=0)  //Turn right
 {
-  digitalWrite(RightMotorDirPin1,HIGH);
-  digitalWrite(RightMotorDirPin2,LOW);
-  digitalWrite(LeftMotorDirPin1,LOW);
-  digitalWrite(LeftMotorDirPin2,HIGH);
-  analogWrite(speedPinL,100);
-  analogWrite(speedPinR,0);
+  digitalWrite(RightMotorDirPin1,LOW);
+  digitalWrite(RightMotorDirPin2,HIGH);
+  digitalWrite(LeftMotorDirPin1,HIGH);
+  digitalWrite(LeftMotorDirPin2,LOW);
+  analogWrite(speedPinL,150);
+  analogWrite(speedPinR,80);
   delay(t);
 }
 void go_Back(int t=0)  //Reverse
 {
   digitalWrite(RightMotorDirPin1,HIGH);
   digitalWrite(RightMotorDirPin2,LOW);
-  digitalWrite(LeftMotorDirPin1,HIGH);
-  digitalWrite(LeftMotorDirPin2,LOW);
-  analogWrite(speedPinL,100);
-  analogWrite(speedPinR,100);
+  digitalWrite(LeftMotorDirPin1,LOW);
+  digitalWrite(LeftMotorDirPin2,HIGH);
+  analogWrite(speedPinL,120);
+  analogWrite(speedPinR,120);
   delay(t);
 }
 void stop_Stop()    //Stop
@@ -70,13 +58,17 @@ void stop_Stop()    //Stop
   digitalWrite(LeftMotorDirPin1,LOW);
   digitalWrite(LeftMotorDirPin2,LOW);
 }
-/*set motor speed */
-void set_Motorspeed(int speed_L,int speed_R)
-{
-  analogWrite(speedPinL,speed_L); 
-  analogWrite(speedPinR,speed_R);   
-}
 
+void go_Park(int t=0)
+{
+  digitalWrite(RightMotorDirPin1,LOW );
+  digitalWrite(RightMotorDirPin2,HIGH);
+  digitalWrite(LeftMotorDirPin1,HIGH);
+  digitalWrite(LeftMotorDirPin2,LOW);
+  analogWrite(speedPinL,0);
+  analogWrite(speedPinR,150);
+  delay(t);
+}
 
 void setup()
 {
@@ -88,67 +80,45 @@ void setup()
   pinMode(LeftMotorDirPin1, OUTPUT);
   pinMode(LeftMotorDirPin2, OUTPUT); 
   pinMode(speedPinR, OUTPUT); 
-  stop_Stop();//stop move  
   
-  pinMode(Trig_PIN, OUTPUT);
-  pinMode(Echo_PIN, INPUT);
+  pinMode(TrigPin, OUTPUT);
+  pinMode(EchoPin, INPUT);
+  pinMode(trct500Pin, INPUT);
   Serial.begin(9600);   // initialize serial for debugging
 
 }
 
-boolean flag=false;
+
 void loop()
 { 
+  int data = analogRead(trct500Pin);
 
- auto_tracking();
+    // Ultrasonic Sensor
+  digitalWrite(9, LOW);
+  digitalWrite(TrigPin,LOW);        //Send level pulses to the Trigpin pins in low and high order
+  delayMicroseconds(2);             //Delay time
+  digitalWrite(TrigPin,HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TrigPin,LOW);
+  double cm=pulseIn(EchoPin,HIGH)/58.0;    //Read the pulse width and convert it to centimeters
+  Serial.print(cm);
+    Serial.print("读取到的数据: ");
+  Serial.println(data);
+  // the lower the voltage, the brighter it is
+if(cm<30){
+    if (data >= 1000 ) {
+    go_Left();
+    Serial.print("go left");
+  } else  {
+    go_Right();
+        Serial.print("go right");
+  }
+}
+else{
+  go_Park();
+  delay(2000);
+  stop_Stop;
+  delay(1000000);
+}
+
 } //end of loop
-
- 
-char sensor[5];
- /*read sensor value string, 1 stands for black, 0 starnds for white, i.e 10000 means the first sensor(from left) detect black line, other 4 sensors detected white ground */
-String read_sensor_values()
-{   int sensorvalue=32;
-  sensor[0]= !digitalRead(LFSensor_0);
- 
-  sensor[1]=!digitalRead(LFSensor_1);
- 
-  sensor[2]=!digitalRead(LFSensor_2);
- 
-  sensor[3]=!digitalRead(LFSensor_3);
- 
-  sensor[4]=!digitalRead(LFSensor_4);
-  sensorvalue +=sensor[0]*16+sensor[1]*8+sensor[2]*4+sensor[3]*2+sensor[4];
-  
-  String senstr= String(sensorvalue,BIN);
-  senstr=senstr.substring(1,6);
-
-
-  return senstr;
-}
-
-void auto_tracking(){
- String sensorval= read_sensor_values();
-  Serial.println(sensorval);
-  if (   sensorval=="10000" || sensorval=="11000")
-  { 
-    //The black line is in the left of the car, need  left turn 
-    go_Left();  //Turn left
-    //set_Motorspeed(FAST_SPEED,FAST_SPEED);
-  }
-  if (sensorval=="01100"  || sensorval=="00110" || sensorval=="00100" || sensorval=="01110"|| sensorval =="01000" ||sensorval =="00010")
-  {
-    go_Advance();  //Turn slight left
-    //set_Motorspeed(0,FAST_SPEED);
-  }
-  if (    sensorval=="00001" || sensorval=="00011" ){ //The black line is  on the right of the car, need  right turn 
-    go_Right();  //Turn right
-    //set_Motorspeed(FAST_SPEED,FAST_SPEED);
-  }
-
- 
-  if (sensorval=="11111"|| sensorval =="00000" ||sensorval =="10001"||sensorval=="11001"||sensorval=="10011"){
-    stop_Stop();   //The car front touch stop line, need stop
-    set_Motorspeed(0,0);
-  }
-    
-}
