@@ -1,0 +1,149 @@
+// Define all pin connections
+#define speedPinR 6    //  RIGHT PWM pin connect MODEL-X ENA
+#define RightMotorDirPin1  5    //Right Motor direction pin 1 to MODEL-X IN1 
+#define RightMotorDirPin2  2    //Right Motor direction pin 2 to MODEL-X IN2
+#define speedPinL 7    // Left PWM pin connect MODEL-X ENB
+#define LeftMotorDirPin1  3    //Left Motor direction pin 1 to MODEL-X IN3 
+#define LeftMotorDirPin2  4   //Left Motor direction pin 1 to MODEL-X IN4 
+#define EchoPin    9   // Ultrasonic Echo pin connect to D2
+#define TrigPin    8   // Ultrasonic Trig pin connect to D3
+#define LFSensor_0 A0  //Infrared Sensor - Line-following
+
+#define FAST_SPEED 400
+#define MID_SPEED 200
+#define SLOW_SPEED  100     //back speed
+unsigned long timeOver30mmStart = 0; /* 用于跟踪距离首次超过30mm的时间点 Used to track the time point when the distance exceeds 30mm for the first time*/
+boolean isOver30mm = false; /* 标记是否已经开始跟踪超过30mm的情况 Whether the marker has started tracking beyond 30mm*/
+
+float distance;
+/*motor control*/
+void go_Advance(void)  //Forward
+{
+  digitalWrite(RightMotorDirPin1, LOW);
+  digitalWrite(RightMotorDirPin2,HIGH);
+  digitalWrite(LeftMotorDirPin1,LOW);
+  digitalWrite(LeftMotorDirPin2,HIGH);
+  analogWrite(speedPinL,100);
+  analogWrite(speedPinR,100);
+}
+void go_Left(int t=0)  //Turn left
+{
+  digitalWrite(RightMotorDirPin1,LOW );
+  digitalWrite(RightMotorDirPin2,HIGH);
+  digitalWrite(LeftMotorDirPin1,HIGH);
+  digitalWrite(LeftMotorDirPin2,LOW);
+  analogWrite(speedPinL,0);
+  analogWrite(speedPinR,100);
+  delay(t);
+}
+void go_Right(int t=0)  //Turn right
+{
+  digitalWrite(RightMotorDirPin1,HIGH);
+  digitalWrite(RightMotorDirPin2,LOW);
+  digitalWrite(LeftMotorDirPin1,LOW);
+  digitalWrite(LeftMotorDirPin2,HIGH);
+  analogWrite(speedPinL,100);
+  analogWrite(speedPinR,0);
+  delay(t);
+}
+void go_Back(int t=0)  //Reverse
+{
+  digitalWrite(RightMotorDirPin1,HIGH);
+  digitalWrite(RightMotorDirPin2,LOW);
+  digitalWrite(LeftMotorDirPin1,HIGH);
+  digitalWrite(LeftMotorDirPin2,LOW);
+  analogWrite(speedPinL,100);
+  analogWrite(speedPinR,100);
+  delay(t);
+}
+void stop_Stop()    //Stop
+{
+  digitalWrite(RightMotorDirPin1, LOW);
+  digitalWrite(RightMotorDirPin2,LOW);
+  digitalWrite(LeftMotorDirPin1,LOW);
+  digitalWrite(LeftMotorDirPin2,LOW);
+}
+/*set motor speed */
+void set_Motorspeed(int speed_L,int speed_R)
+{
+  analogWrite(speedPinL,speed_L); 
+  analogWrite(speedPinR,speed_R);   
+}
+
+
+void setup()
+{
+   
+  pinMode(RightMotorDirPin1, OUTPUT); 
+  pinMode(RightMotorDirPin2, OUTPUT); 
+  pinMode(speedPinL, OUTPUT);  
+ 
+  pinMode(LeftMotorDirPin1, OUTPUT);
+  pinMode(LeftMotorDirPin2, OUTPUT); 
+  pinMode(speedPinR, OUTPUT); 
+  stop_Stop();//stop move  
+  
+  pinMode(TrigPin, OUTPUT);
+  pinMode(EchoPin, INPUT);
+  Serial.begin(9600);   // initialize serial for debugging
+
+}
+
+boolean flag=false;
+void loop()
+{ 
+  go_Advance();
+  // Infrared (Line-following) Sensor
+  // read the input on analog pin 0:
+  int sensorValue = analogRead(A0);
+  // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
+  float voltage = sensorValue * (5.0 / 1024.0);
+
+  // the lower the voltage, the brighter it is
+  if ((voltage >= 0) && (voltage <= 0.4)) {
+    Serial.print ("it is dark - ");
+    go_Left();
+    delay(1000);
+  } else if ((voltage > 0.4) && (voltage <= 2)) {
+    go_Right();
+    Serial.print ("it is bright - ");
+    delay(1000);
+  } else {
+    go_Right();
+    Serial.print ("it is bright - ");
+    delay(1000);
+  }
+  // print out the value you read:
+  Serial.println(voltage);
+
+// D0:
+
+// when sensor pin D0 is connected, the sensor only knows the state light (0.14V) and dark (5.0V).
+// The brightness at which the particular state is to be set can be set using the rotary potentiometer.
+
+
+  // Ultrasonic Sensor
+  digitalWrite(9, LOW);
+
+  digitalWrite(TrigPin,LOW);        //Send level pulses to the Trigpin pins in low and high order
+  delayMicroseconds(2);             //Delay time
+  digitalWrite(TrigPin,HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TrigPin,LOW);
+  double cm=pulseIn(EchoPin,HIGH)/58.0;    //Read the pulse width and convert it to centimeters
+  Serial.print(cm);
+  if(cm<=40.0){
+    digitalWrite(9, HIGH);
+    Serial.println("/nno space"); //include a line to kep going for a little bit
+    delay(1000);
+  } else if(cm>40){
+    digitalWrite(9, LOW);
+    Serial.println("/nSpace detected"); //include a line to turn right
+    delay(1000);
+  }
+    
+  delay(3000);
+
+
+} //end of loop
+
